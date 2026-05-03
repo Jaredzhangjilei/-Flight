@@ -326,6 +326,30 @@
       transform-origin: center;
     }
 
+    .skyteam-fly-logo img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .skyteam-fly-badge {
+      position: absolute;
+      right: -10px;
+      top: -14px;
+      min-width: 32px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #31d158;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      white-space: nowrap;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 8px 14px rgba(31, 93, 57, 0.28);
+    }
+
     @keyframes logoBlink {
       0%, 100% { filter: brightness(1) saturate(1.08); transform: scale(1); }
       50% { filter: brightness(1.28) saturate(1.22); transform: scale(1.12); }
@@ -682,21 +706,29 @@
       { code: "MF", name: "XiamenAir", file: "18_xiamenair.png", x: 1011, y: 396, width: 171, height: 46 }
     ];
     const SKYTEAM_TASK_BY_FROM_INDEX = {
-      0: "DL",
-      1: "VS",
-      2: "SK",
-      3: "KL",
-      4: "AF",
-      6: "RO",
-      7: "UX",
-      8: "SV",
-      10: "MF",
-      11: "KE",
-      13: "CI",
-      14: "GA",
-      16: "VN",
-      17: "KQ",
-      18: "MU"
+      0: { code: "DL" },
+      1: { code: "VS" },
+      2: { code: "SK" },
+      3: { code: "KL" },
+      4: { code: "AF" },
+      5: { code: "RO", label: "RO 里程" },
+      7: { code: "UX" },
+      8: { code: "SV" },
+      10: { code: "MF" },
+      11: { code: "KE" },
+      13: { code: "CI" },
+      14: { code: "GA" },
+      16: { code: "VN" },
+      17: { code: "KQ" },
+      18: { code: "MU" },
+      19: { code: "VN", label: "+2" },
+      20: { code: "VN", label: "+3" },
+      21: { code: "VN", label: "+4" },
+      22: { code: "VN", label: "+5" },
+      23: { code: "GA", label: "+2" },
+      24: { code: "GA", label: "+3" },
+      25: { code: "MU", label: "MU +2" },
+      27: { code: "DL", label: "DL +2" }
     };
 
     const createEl = (name, attrs = {}) => {
@@ -915,10 +947,13 @@
       }
     };
 
+    const getSkyTeamTask = (fromIndex) => SKYTEAM_TASK_BY_FROM_INDEX[fromIndex] || null;
+
     const syncSkyTeamProgress = (activeLegIndex = -1, includeActive = false) => {
       routeLegs.forEach((leg, index) => {
         if (index > activeLegIndex || (!includeActive && index === activeLegIndex)) return;
-        completeSkyTeamCode(SKYTEAM_TASK_BY_FROM_INDEX[leg.fromIndex], false);
+        const task = getSkyTeamTask(leg.fromIndex);
+        if (task) completeSkyTeamCode(task.code, false);
       });
       updateSkyTeamDisplay();
     };
@@ -933,9 +968,11 @@
       return { x: clientPoint.x, y: clientPoint.y };
     };
 
-    const flySkyTeamLogo = (code, point, legIndex, durationMs) => {
+    const flySkyTeamLogo = (task, point, legIndex, durationMs) => {
+      if (!task) return;
+      const { code, label } = task;
       const target = skyteamLogoNodes[code];
-      if (!target || skyteamCompletedCodes.has(code) || skyteamAnimatingCodes.has(code) || skyteamAnimatedLegs.has(legIndex)) return;
+      if (!target || skyteamAnimatingCodes.has(code) || skyteamAnimatedLegs.has(legIndex)) return;
       const targetBox = target.getBoundingClientRect();
       if (!targetBox.width || !targetBox.height) {
         completeSkyTeamCode(code, true);
@@ -951,14 +988,22 @@
       const endY = targetBox.top + targetBox.height / 2 - height / 2;
       const startX = start.x + 18;
       const startY = start.y - height - 12;
-      const flyer = document.createElement("img");
+      const flyer = document.createElement("div");
       flyer.className = "skyteam-fly-logo";
-      flyer.src = target.src;
-      flyer.alt = "";
       flyer.style.left = `${startX}px`;
       flyer.style.top = `${startY}px`;
       flyer.style.width = `${width}px`;
       flyer.style.height = `${height}px`;
+      const flyerImg = document.createElement("img");
+      flyerImg.src = target.src;
+      flyerImg.alt = "";
+      flyer.appendChild(flyerImg);
+      if (label) {
+        const badge = document.createElement("span");
+        badge.className = "skyteam-fly-badge";
+        badge.textContent = label;
+        flyer.appendChild(badge);
+      }
       document.body.appendChild(flyer);
 
       const animation = flyer.animate([
@@ -1235,13 +1280,13 @@
       updatePlaneLabel(p, TRANSPORT_DETAILS[flightIndex] || "");
       updateRoutesForLeg(flightIndex);
       syncSkyTeamProgress(flightIndex, false);
-      const skyteamCode = SKYTEAM_TASK_BY_FROM_INDEX[leg.fromIndex];
-      if (skyteamCode && localProgress < 0.18 && isPlaying && !isDraggingProgress && !hasCompleted) {
-        flySkyTeamLogo(skyteamCode, p, flightIndex, leg.durationMs);
-      } else if (skyteamCode && (isDraggingProgress || !isPlaying) && localProgress > 0.18) {
-        completeSkyTeamCode(skyteamCode, false);
-      } else if (skyteamCode && localProgress >= 0.18 && !skyteamCompletedCodes.has(skyteamCode) && !skyteamAnimatingCodes.has(skyteamCode)) {
-        completeSkyTeamCode(skyteamCode, false);
+      const skyteamTask = getSkyTeamTask(leg.fromIndex);
+      if (skyteamTask && localProgress < 0.18 && isPlaying && !isDraggingProgress && !hasCompleted) {
+        flySkyTeamLogo(skyteamTask, p, flightIndex, leg.durationMs);
+      } else if (skyteamTask && (isDraggingProgress || !isPlaying) && localProgress > 0.18) {
+        completeSkyTeamCode(skyteamTask.code, false);
+      } else if (skyteamTask && localProgress >= 0.18 && !skyteamCompletedCodes.has(skyteamTask.code) && !skyteamAnimatingCodes.has(skyteamTask.code)) {
+        completeSkyTeamCode(skyteamTask.code, false);
       }
     };
 
