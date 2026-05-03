@@ -1,0 +1,19 @@
+id,name,x,y,width,height,file
+1,Aerolineas Argentinas,97,195,171,48,01_aerolineas_argentinas.png
+2,Aeromexico,300,195,171,46,02_aeromexico.png
+3,Air Europa,503,195,171,46,03_air_europa.png
+4,Air France,706,195,171,46,04_air_france.png
+5,China Airlines,909,195,171,46,05_china_airlines.png
+6,China Eastern,1112,195,171,46,06_china_eastern.png
+7,Delta Air Lines,1315,195,171,46,07_delta_air_lines.png
+8,Garuda Indonesia,97,296,171,47,08_garuda_indonesia.png
+9,Kenya Airways,300,296,171,47,09_kenya_airways.png
+10,KLM,503,296,171,47,10_klm.png
+11,Korean Air,706,296,171,47,11_korean_air.png
+12,Middle East Airlines,909,296,171,47,12_middle_east_airlines.png
+13,SAS,1112,296,171,47,13_sas.png
+14,Saudia,1315,296,171,47,14_saudia.png
+15,TAROM,402,396,171,46,15_tarom.png
+16,Vietnam Airlines,605,396,171,46,16_vietnam_airlines.png
+17,Virgin Atlantic,808,396,171,46,17_virgin_atlantic.png
+18,XiamenAir,1011,396,171,46,18_xiamenair.png
